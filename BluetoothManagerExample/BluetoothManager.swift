@@ -51,13 +51,13 @@ class BluetoothManager: NSObject {
     }
     
     func connect(_ peripheral: CBPeripheral) {
-        print("[BluetoothManager] Sending a connect request to peripheral \(peripheral)")
+        print("[BluetoothManager] Sending a connect request to peripheral '\(peripheral)'")
         centralManager.connect(peripheral, options: nil)
     }
     
     /// This method retrieves previously connected peripherals and tries to re-connect them without `scanForPeripherals`.
     /// Because `connect()` calls do not time out (per Apple documentation), the central manager will wait until a
-    // device is in range, and then will try to connect to it.
+    /// device is in range, and then will try to connect to it.
     /// When a device connects, the `didConnect()` delegate method is called.
     func connectToKnownPeripherals() {
         // Retrieve peripheral identifiers from devices we connected before
@@ -73,11 +73,12 @@ class BluetoothManager: NSObject {
         print("[BluetoothManager] Known peripherals \(knownPeripherals)")
 
         peripherals.append(contentsOf: knownPeripherals)
-        delegate?.updateInterface()
-
+        
         knownPeripherals.forEach { (peripherals) in
             connect(peripherals)
         }
+        
+        delegate?.updateInterface()
     }
     
 }
@@ -131,14 +132,14 @@ extension BluetoothManager: CBCentralManagerDelegate {
             return
         }
         
-        print("[BluetoothManager] Did discovered peripheral \(peripheral) rssi \(RSSI)")
+        print("[BluetoothManager] Did discovered peripheral '\(peripheral)' rssi '\(RSSI)'")
 
         peripherals.insert(peripheral, at: 0)
         delegate?.updateInterface()
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        print("[BluetoothManager] Did connect peripheral \(peripheral)")
+        print("[BluetoothManager] Did connect peripheral '\(peripheral)'")
         delegate?.updateInterface()
         
         // We store the connected peripheral in order to automaticly connect to it next time
@@ -146,12 +147,17 @@ extension BluetoothManager: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        print("[BluetoothManager] Did disconnect peripheral \(peripheral)")
+        print("[BluetoothManager] Did disconnect peripheral '\(peripheral)'")
+        
+        if knownPeripheralIdentifiers.contains(peripheral.identifier) {
+            connect(peripheral)
+        }
+        
         delegate?.updateInterface()
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        print("[BluetoothManager] Did failed to connect peripheral \(peripheral)")
+        print("[BluetoothManager] Did failed to connect peripheral '\(peripheral)'")
         delegate?.updateInterface()
     }
     
@@ -172,7 +178,6 @@ extension CBManagerState: CustomStringConvertible {
         }
     }
 }
-
 
 extension CBPeripheralState: CustomStringConvertible {
     public var description: String {
